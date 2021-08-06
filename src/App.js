@@ -1,25 +1,41 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import styled from 'styled-components/macro';
 
-function App() {
+import Start from './views/Start';
+import UserHome from './views/UserHome';
+import Results from './views/Results';
+import Header from './components/Header';
+
+const App = () => {
+  const [player] = useState(new Audio(null));
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <AppContainer>
+      <Router>
+        <Switch>
+          <Route path='/home'>
+            <Header />
+            <UserHome />
+          </Route>
+          <Route path='/results/:playlist_url?/:song_count?'>
+            <Header player={player} />
+            <Results player={player} />
+          </Route>
+          <Route path='/'>
+            <Start />
+          </Route>
+        </Switch>
+      </Router>
+      {/* <ToastContainer position='bottom-center' autoClose={5000} /> */}
+    </AppContainer>
   );
-}
+};
 
 export default App;
+
+const AppContainer = styled.div`
+  min-height: 100vh;
+  height: 100%;
+  background: #fff;
+`;
