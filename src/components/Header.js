@@ -17,30 +17,11 @@ const formatArtists = (artists) => {
   return res;
 };
 
-const Header = ({ players }) => {
-  const [player] = useState(new Audio(null));
+const Header = ({ player, historyList }) => {
   const history = useHistory();
-  const [busy, setBusy] = useState(false);
-  const [historyList, setHistory] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
   const [expandedHistory, setExpanded] = useState([]);
   const [selectedHistory, setSelected] = useState(null);
-
-  useEffect(() => {
-    const body = {
-      username: localStorage.getItem('personalifyUser'),
-    };
-    axios
-      .post(`${process.env.REACT_APP_API_URL}/history`, body)
-      .then((res) => {
-        setHistory(res.data.history);
-        setBusy(false);
-      })
-      .catch((err) => {
-        console.log(err);
-        // toast.error(`Error: ${err}`);
-      });
-  }, []);
 
   const getHistory = () => {
     setShowHistory(!showHistory);
@@ -75,46 +56,56 @@ const Header = ({ players }) => {
 
   return (
     <HeaderContainer>
-      <h1>Personalify</h1>
+      <h1 onClick={() => history.push('/')}>Personalify</h1>
       {/* TODO: These should be icons */}
       <UserActions>
         <div>
-          <Button disabled={busy} onClick={() => getHistory()}>
+          <Button
+            bColor={'#161748'}
+            disabled={historyList.length === 0}
+            onClick={() => getHistory()}
+          >
             History
           </Button>
           <HistoryTab show={showHistory && historyList.length > 0 ? 'block' : 'none'}>
-            {historyList.map((item) => (
-              <>
-                <div
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    expandHistory(item.id);
-                  }}
-                >
-                  <b>{item.date}</b>
-                </div>
-                <hr size='1' />
-                {selectedHistory === item.id && (
-                  <>
-                    {expandedHistory.map((song) => (
-                      <Result
-                        player={player}
-                        song_id={song.id}
-                        track={song.track}
-                        artists={formatArtists(song.artists)}
-                        images={song.images}
-                        preview={song.preview}
-                        history={true}
-                      />
-                    ))}
-                  </>
-                )}
-              </>
+            {historyList.map((item, index) => (
+              <React.Fragment key={`history${index}`}>
+                <HistoryItem>
+                  <div
+                    onClick={() => {
+                      expandHistory(item.id);
+                    }}
+                  >
+                    <b>{item.date}</b>
+                  </div>
+                  <hr size='1' />
+                  <ExpandedHistory>
+                    {selectedHistory === item.id && (
+                      <>
+                        {expandedHistory.map((song, index) => (
+                          <Result
+                            key={`result${index}`}
+                            player={player}
+                            song_id={song.id}
+                            track={song.track}
+                            artists={formatArtists(song.artists)}
+                            images={song.images}
+                            preview={song.preview}
+                            history={true}
+                          />
+                        ))}
+                      </>
+                    )}
+                  </ExpandedHistory>
+                </HistoryItem>
+              </React.Fragment>
             ))}
           </HistoryTab>
         </div>
         <div>
-          <Button onClick={() => logout()}>Logout</Button>
+          <Button bColor={'#e63434'} onClick={() => logout()}>
+            Logout
+          </Button>
         </div>
       </UserActions>
     </HeaderContainer>
@@ -125,9 +116,10 @@ export default Header;
 
 const HeaderContainer = styled.div`
   position: relative;
-  background-color: #ff5;
-  // background-color: #494d5f;
+  background-color: #a5b0fe;
   padding: 10px;
+  z-index: 2;
+  height: 45px;
 
   h1 {
     color: #161748;
@@ -149,7 +141,7 @@ const UserActions = styled.div`
 `;
 
 const Button = styled.button`
-  background: #f75990;
+  background: ${(props) => props.bColor};
   border: none;
   padding: 15px 30px;
   cursor: pointer;
@@ -157,13 +149,15 @@ const Button = styled.button`
   font-weight: bold;
   align-self: center;
   width: 100%;
+  border-radius: 8px;
 
   padding: 8px 15px;
   font-size: 12px;
+  color: white;
 
   &:disabled {
     background-color: silver;
-    color: dimgray;
+    color: black;
     cursor: not-allowed;
   }
 `;
@@ -178,8 +172,18 @@ const HistoryTab = styled.div`
   font-size: 15px;
 
   display: ${(props) => props.show};
+  overflow-y: auto;
+  max-height: 80vh;
+`;
 
+const HistoryItem = styled.div`
   > div:first-child {
     cursor: pointer;
   }
+`;
+
+const ExpandedHistory = styled.div`
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 50vh;
 `;

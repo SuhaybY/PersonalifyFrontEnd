@@ -18,18 +18,25 @@ const formatArtists = (artists) => {
   return res;
 };
 
-const Results = ({ player }) => {
+const Results = ({ player, historyList, setHistory }) => {
   const history = useHistory();
   const { playlist_url, song_count } = useParams();
   const [songList, setSongs] = useState([]);
+  const [ratings, setRatings] = useState([]);
   const [load, setLoad] = useState(true);
+  const [status, setStatus] = useState('Training model & loading personalized tracks...');
 
   useEffect(() => {
+    // Debugging:
+    // setLoad(false);
+    // setSongs(smallTestData);
+    // setRatings(Array(smallTestData.length).fill(null));
+    // return;
     if (!playlist_url || !song_count) {
       history.replace('/');
       return;
     }
-    history.replace('/results');
+    // history.replace('/results');
     const body = {
       username: localStorage.getItem('personalifyUser'),
       playlist_url: decodeURIComponent(playlist_url),
@@ -41,36 +48,82 @@ const Results = ({ player }) => {
         console.log(res);
         setLoad(false);
         setSongs(res.data.results);
+        setHistory([
+          ...historyList,
+          {
+            id: res.data.id,
+            date: res.data.date,
+          },
+        ]);
+        setRatings(Array(res.data.results.length).fill(null));
       })
       .catch((err) => {
         console.log(err);
         // toast.error(`Error: ${err}`);
       });
-
-    // setLoad(false);
-    // setSongs(testData);
   }, []);
+
+  const submitRatings = () => {
+    const recommendation_list = songList.map((x) => [x.name, x.artists]);
+    const body = {
+      username: localStorage.getItem('personalifyUser'),
+      url: decodeURIComponent(playlist_url),
+      recommendation_list,
+      ratings,
+    };
+
+    setLoad(true);
+    setStatus('Retrieving updated tracks...');
+
+    axios
+      .post(`${process.env.REACT_APP_API_URL}/ratesongs`, body)
+      .then((res) => {
+        console.log(res);
+        setLoad(false);
+        setSongs(res.data.results);
+        setHistory([
+          ...historyList,
+          {
+            id: res.data.id,
+            date: res.data.date,
+          },
+        ]);
+        setRatings(Array(res.data.results.length).fill(null));
+      })
+      .catch((err) => {
+        console.log(err);
+        // toast.error(`Error: ${err}`);
+      });
+  };
 
   return (
     <HomeContainer>
       {load ? (
         <LoadContainer>
           <Loading />
-          <p>Retrieving tracks...</p>
+          <p>{status}</p>
         </LoadContainer>
       ) : (
         <ResultContainer>
-          <h2>Results</h2>
+          <ResultHeading>
+            <h2>Results</h2>
+            <Button disabled={ratings.some((x) => x === null)} onClick={submitRatings}>
+              Submit Review
+            </Button>
+          </ResultHeading>
           <hr size='1' />
           <ResultGrid>
             {songList.map((song, index) => (
               <Result
+                idx={index}
+                key={`result${index}`}
                 player={player}
-                song_id={song.id}
                 track={song.name}
                 artists={formatArtists(song.artists)}
                 images={song['album.images']}
                 preview={song.preview_url}
+                ratings={ratings}
+                setRatings={setRatings}
               />
             ))}
           </ResultGrid>
@@ -86,18 +139,23 @@ const HomeContainer = styled.div``;
 
 const LoadContainer = styled.div`
   text-align: center;
+  padding-top: 20vh;
 `;
 
 const ResultContainer = styled.div`
   width: 80%;
-  padding: 10px;
   margin: 10px auto;
   background-color: #1a1a1d;
 
   h2 {
     color: white;
     margin: 0;
+    padding: 10px 10px 0px;
   }
+`;
+
+const ResultHeading = styled.div`
+  position: relative;
 `;
 
 const ResultGrid = styled.div`
@@ -108,6 +166,196 @@ const ResultGrid = styled.div`
   max-height: calc(80vh - 20px);
 `;
 
+const Button = styled.button`
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  background-color: #161748;
+  border: none;
+  padding: 15px 30px;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: bold;
+  align-self: center;
+  width: 150px;
+  border-radius: 8px;
+
+  padding: 8px 15px;
+  font-size: 12px;
+  color: white;
+
+  &:disabled {
+    background-color: silver;
+    color: black;
+    cursor: not-allowed;
+  }
+`;
+
+const smallTestData = [
+  {
+    id: '7ImkjvM1OKWhJ5HIPOHcHE',
+    name: 'Walking with a Ghost',
+    popularity: 55,
+    duration_ms: 150293,
+    explicit: 0,
+    artists: "['Tegan and Sara']",
+    id_artists: "['5e1BZulIiYWPRm8yogwUYH']",
+    release_date: '2004-09-14',
+    danceability: 0.788,
+    energy: 0.541,
+    key: 6,
+    loudness: -5.987,
+    mode: 0,
+    speechiness: 0.0387,
+    acousticness: 0.125,
+    instrumentalness: 0.000231,
+    liveness: 0.0679,
+    valence: 0.928,
+    tempo: 118.058,
+    time_signature: 4,
+    preview_url:
+      'https://p.scdn.co/mp3-preview/e29300060990a5502ebfc4156f638ae36c09fd27?cid=f3f14386465b4ac1b96c23194a0aec4b',
+    'album.images': [
+      {
+        height: 640,
+        url: 'https://i.scdn.co/image/ab67616d0000b273d424a2675b400a7d2dac48b9',
+        width: 640,
+      },
+      {
+        height: 300,
+        url: 'https://i.scdn.co/image/ab67616d00001e02d424a2675b400a7d2dac48b9',
+        width: 300,
+      },
+      {
+        height: 64,
+        url: 'https://i.scdn.co/image/ab67616d00004851d424a2675b400a7d2dac48b9',
+        width: 64,
+      },
+    ],
+  },
+  {
+    id: '0OpSYP9Oly3SqmeIgiRnzT',
+    name: "All These Things That I've Done",
+    popularity: 55,
+    duration_ms: 301747,
+    explicit: 0,
+    artists: "['The Killers']",
+    id_artists: "['0C0XlULifJtAgn6ZNCW2eu']",
+    release_date: '2004-06-15',
+    danceability: 0.552,
+    energy: 0.71,
+    key: 6,
+    loudness: -6.925,
+    mode: 1,
+    speechiness: 0.0425,
+    acousticness: 0.00164,
+    instrumentalness: 5.07e-6,
+    liveness: 0.116,
+    valence: 0.206,
+    tempo: 118.276,
+    time_signature: 4,
+    preview_url: null,
+    'album.images': [
+      {
+        height: 640,
+        url: 'https://i.scdn.co/image/ab67616d0000b2739c284a6855f4945dc5a3cd73',
+        width: 640,
+      },
+      {
+        height: 300,
+        url: 'https://i.scdn.co/image/ab67616d00001e029c284a6855f4945dc5a3cd73',
+        width: 300,
+      },
+      {
+        height: 64,
+        url: 'https://i.scdn.co/image/ab67616d000048519c284a6855f4945dc5a3cd73',
+        width: 64,
+      },
+    ],
+  },
+  {
+    id: '2KMT02c16COpkLxFCnCxzE',
+    name: 'Underwater',
+    popularity: 55,
+    duration_ms: 349893,
+    explicit: 0,
+    artists: "['RÜFÜS DU SOL']",
+    id_artists: "['5Pb27ujIyYb33zBqVysBkj']",
+    release_date: '2018-10-19',
+    danceability: 0.604,
+    energy: 0.82,
+    key: 6,
+    loudness: -6.64,
+    mode: 0,
+    speechiness: 0.0342,
+    acousticness: 0.0181,
+    instrumentalness: 0.0168,
+    liveness: 0.115,
+    valence: 0.44,
+    tempo: 117.996,
+    time_signature: 4,
+    preview_url:
+      'https://p.scdn.co/mp3-preview/b2ddd02038f2bc6794e4f2cd4a7a1e9798442ed4?cid=f3f14386465b4ac1b96c23194a0aec4b',
+    'album.images': [
+      {
+        height: 640,
+        url: 'https://i.scdn.co/image/ab67616d0000b27397b4fe1728c5498d1f30d9e2',
+        width: 640,
+      },
+      {
+        height: 300,
+        url: 'https://i.scdn.co/image/ab67616d00001e0297b4fe1728c5498d1f30d9e2',
+        width: 300,
+      },
+      {
+        height: 64,
+        url: 'https://i.scdn.co/image/ab67616d0000485197b4fe1728c5498d1f30d9e2',
+        width: 64,
+      },
+    ],
+  },
+  {
+    id: '6U09CC1Hm0rfXyzZpLZOdg',
+    name: 'Berbeza Kasta',
+    popularity: 55,
+    duration_ms: 308571,
+    explicit: 0,
+    artists: "['Kalia Siska', 'SKA86']",
+    id_artists: "['70hsEvlt6YZPT97UIvzpEu', '2Kp7UY28pWLljMgp0Hydn6']",
+    release_date: '2020-07-31',
+    danceability: 0.783,
+    energy: 0.714,
+    key: 6,
+    loudness: -5.618,
+    mode: 0,
+    speechiness: 0.0326,
+    acousticness: 0.292,
+    instrumentalness: 3.22e-5,
+    liveness: 0.355,
+    valence: 0.824,
+    tempo: 116.988,
+    time_signature: 4,
+    preview_url:
+      'https://p.scdn.co/mp3-preview/e502c742c5f354a467bb6c09b540743f8dae50e4?cid=f3f14386465b4ac1b96c23194a0aec4b',
+    'album.images': [
+      {
+        height: 640,
+        url: 'https://i.scdn.co/image/ab67616d0000b27359164e60989885049565b2dd',
+        width: 640,
+      },
+      {
+        height: 300,
+        url: 'https://i.scdn.co/image/ab67616d00001e0259164e60989885049565b2dd',
+        width: 300,
+      },
+      {
+        height: 64,
+        url: 'https://i.scdn.co/image/ab67616d0000485159164e60989885049565b2dd',
+        width: 64,
+      },
+    ],
+  },
+];
 const testData = [
   {
     id: '7ImkjvM1OKWhJ5HIPOHcHE',

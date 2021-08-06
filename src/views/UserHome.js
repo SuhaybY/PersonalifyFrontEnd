@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import styled from 'styled-components/macro';
 
-const regex = /^(https:\/\/open\.spotify\.com\/playlist\/)(\w+)\?si=(\w+)$/;
+import shazam from '../assets/shazam.svg';
+const regex = /^(https:\/\/open\.spotify\.com\/playlist\/)(\w+)\?si=(\w+)/;
 
 const UserHome = () => {
   const history = useHistory();
   const [playlistURL, setURL] = useState(
-    'https://open.spotify.com/playlist/37i9dQZF1EtaOgfrY9qD5t?si=8b561d7cfd224817'
+    'https://open.spotify.com/playlist/37i9dQZF1EM6jGD9bK7FaS?si=xVDfglQbQOa4jbHNDTgJqA&dl_branch=1'
   );
   // const [playlistURL, setURL] = useState('');
   const [songCount, setCount] = useState(10);
@@ -30,36 +31,38 @@ const UserHome = () => {
 
   return (
     <HomeContainer>
-      <h2>Discover new songs!</h2>
-      <InputData>
-        <div>
-          Playlist URL <br />
-          <TextInput
-            value={playlistURL}
-            onChange={(e) => setURL(e.target.value)}
-            placeholder='https://open.spotify.com/playlist/37i9dQZF1EtaOgfrY9qD5t?si=8b561d7cfd224817'
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') inputPlaylist();
-            }}
-          ></TextInput>
-        </div>
-        <div>
-          Recommendation # <br />
-          <TextInput
-            type='number'
-            min='5'
-            max='50'
-            value={songCount}
-            onChange={(e) => setCount(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter') inputPlaylist();
-            }}
-          ></TextInput>
-        </div>
-      </InputData>
-      <Button disabled={!regex.test(playlistURL) || !songCount} onClick={inputPlaylist}>
-        Get Songs
-      </Button>
+      <InputContainer>
+        <h2>Discover new songs!</h2>
+        <InputData>
+          <div>
+            Playlist URL <br />
+            <TextInput
+              value={playlistURL}
+              onChange={(e) => setURL(e.target.value)}
+              placeholder='https://open.spotify.com/playlist/37i9dQZF1EtaOgfrY9qD5t?si=8b561d7cfd224817'
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') inputPlaylist();
+              }}
+            ></TextInput>
+          </div>
+          <div>
+            Number of recommendations <br />
+            <TextInput
+              type='number'
+              min='5'
+              max='50'
+              value={songCount}
+              onChange={(e) => setCount(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') inputPlaylist();
+              }}
+            ></TextInput>
+          </div>
+        </InputData>
+        <GetSongs disabled={!regex.test(playlistURL) || !songCount} onClick={inputPlaylist}>
+          <img src={shazam} />
+        </GetSongs>
+      </InputContainer>
     </HomeContainer>
   );
 };
@@ -67,7 +70,13 @@ const UserHome = () => {
 export default UserHome;
 
 const HomeContainer = styled.div`
-  background-color: #626262;
+  width: 100%;
+  height: calc(100vh - 65px);
+  background-color: #e4e2ff;
+`;
+
+const InputContainer = styled.div`
+  background-color: #a5b0fe;
 
   // Center horizontal + vertical
   position: absolute;
@@ -75,9 +84,11 @@ const HomeContainer = styled.div`
   left: 50%;
   transform: translate(-50%, -50%);
   color: black;
+  border-radius: 8px;
 
   h2 {
     text-align: center;
+    margin: 10px;
   }
 `;
 
@@ -101,20 +112,22 @@ const TextInput = styled.input`
   width: calc(100% - 20px);
 `;
 
-const Button = styled.button`
-  background: #f75990;
-  border: none;
-  padding: 15px 30px;
+const GetSongs = styled.div`
   cursor: pointer;
-  font-size: 20px;
-  font-weight: bold;
-  align-self: center;
-  width: calc(100% - 20px);
-  margin: 10px;
+  width: 120px;
+  height: 120px;
+  background: white;
+  border-radius: 65px;
+  margin: 0 auto;
+  margin-bottom: 10px;
+  position: relative;
 
-  &:disabled {
-    background-color: silver;
-    color: dimgray;
-    cursor: not-allowed;
+  img {
+    width: 100px;
+    height: 100px;
+    margin: 50% 0 0 50%;
+    position: absolute;
+    top: -50px;
+    left: -50px;
   }
 `;

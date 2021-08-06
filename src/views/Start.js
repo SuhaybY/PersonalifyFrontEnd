@@ -79,7 +79,8 @@ const About = styled.div`
   padding-right: 320px;
 
   h1 {
-    color: #161748;
+    color: #212132;
+    font-size: 44px;
     margin: 0;
   }
 `;
@@ -87,7 +88,7 @@ const About = styled.div`
 const Login = styled.div`
   width: 300px;
   display: inline-block;
-  background-color: #1877f2;
+  background-color: #eeccff;
   padding: 10px;
   border-radius: 6px;
   vertical-align: top;

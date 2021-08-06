@@ -1,23 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components/macro';
-import axios from 'axios';
 
 import play from '../assets/play.svg';
 import pause from '../assets/pause.svg';
-import unavailable from '../assets/unavailable.svg';
+import unavailable_sample from '../assets/unavailable_sample.svg';
+import unavailable_image from '../assets/unavailable_image.svg';
 
 export default function Result({
+  idx,
   player,
-  song_id,
   track,
   artists,
   images,
   preview,
+  ratings,
+  setRatings,
   history = false,
 }) {
   const [playTrack, setPlayed] = useState(false);
   const [hover, setHover] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const [liked, setLiked] = useState(0);
 
   useEffect(() => {
     if (playTrack && player.src !== preview) {
@@ -34,56 +36,54 @@ export default function Result({
   };
 
   const rateSong = (rating) => {
-    console.log(song_id, rating);
-    setBusy(true);
-    const body = {
-      username: localStorage.getItem('personalifyUser'),
-      song_id,
-      rating,
-    };
-    axios
-      .post(`${process.env.REACT_APP_API_URL}/ratesong`, body)
-      .then((res) => {
-        console.log(res);
-        setBusy(false);
-      })
-      .catch((err) => {
-        console.log(err);
-        // toast.error(`Error: ${err}`);
-      });
+    const updated = ratings;
+    updated[idx] = rating;
+    setRatings([...updated]);
   };
 
   return (
     <ResultContainer>
       <ResultImages
         onClick={playSong}
-        onMouseEnter={() => !!preview && setHover(true)}
-        onMouseLeave={() => !!preview && setHover(false)}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
         hover={!!preview ? 'pointer' : 'default'}
       >
         <AlbumImage
-          src={images && images[0].url}
-          onError={(e) => (e.target.src = unavailable)}
+          src={!!images ? images[0].url : unavailable_image}
+          onError={(e) => (e.target.src = unavailable_image)}
           opacity={hover ? 0.2 : 1}
         />
-        {!!preview && hover && <PlayImage src={playTrack ? pause : play} />}
+        {hover && <PlayImage src={preview ? (playTrack ? pause : play) : unavailable_sample} />}
       </ResultImages>
       <div>
-        <MovieDetails>
+        <SongDetails>
           <div>
             <b>{track}</b>
           </div>
           <div>{artists && artists.join(', ')}</div>
-        </MovieDetails>
+        </SongDetails>
         {!history && (
-          <MovieActions>
-            <button onClick={() => rateSong(true)} disabled={busy}>
+          <SongActions>
+            <Button
+              bColor={liked === 1 ? 'green' : '#1a1a1d'}
+              onClick={() => {
+                rateSong(true);
+                setLiked(1);
+              }}
+            >
               Like
-            </button>
-            <button onClick={() => rateSong(false)} disabled={busy}>
+            </Button>
+            <Button
+              bColor={liked === 2 ? 'red' : '#1a1a1d'}
+              onClick={() => {
+                rateSong(false);
+                setLiked(2);
+              }}
+            >
               Dislike
-            </button>
-          </MovieActions>
+            </Button>
+          </SongActions>
         )}
       </div>
     </ResultContainer>
@@ -100,6 +100,11 @@ const ResultContainer = styled.div`
 
   > div {
     position: relative;
+  }
+
+  > div:nth-child(2) {
+    display: flex;
+    flex-direction: column;
   }
 `;
 
@@ -125,12 +130,28 @@ const PlayImage = styled.img`
   z-index: 1;
 `;
 
-const MovieDetails = styled.div`
+const SongDetails = styled.div`
+  padding: 5px 10px;
+  height: calc(100% - 20px);
+  overflow-y: auto;
+`;
+
+const SongActions = styled.div`
   padding: 5px 10px;
 `;
 
-const MovieActions = styled.div`
-  position: absolute;
-  padding: 5px 10px;
-  bottom: 0;
+const Button = styled.button`
+  background: ${(props) => props.bColor};
+  border: none;
+  padding: 15px 30px;
+  margin-right: 5px;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: bold;
+  align-self: center;
+  border-radius: 8px;
+
+  padding: 8px 15px;
+  font-size: 12px;
+  color: white;
 `;
