@@ -7,10 +7,7 @@ const regex = /^(https:\/\/open\.spotify\.com\/playlist\/)(\w+)\?si=(\w+)/;
 
 const UserHome = () => {
   const history = useHistory();
-  const [playlistURL, setURL] = useState(
-    'https://open.spotify.com/playlist/37i9dQZF1EM6jGD9bK7FaS?si=xVDfglQbQOa4jbHNDTgJqA&dl_branch=1'
-  );
-  // const [playlistURL, setURL] = useState('');
+  const [playlistURL, setURL] = useState('');
   const [songCount, setCount] = useState(10);
 
   useEffect(() => {
@@ -129,5 +126,10 @@ const GetSongs = styled.div`
     position: absolute;
     top: -50px;
     left: -50px;
+  }
+
+  &[disabled] {
+    color: dimgray;
+    cursor: not-allowed;
   }
 `;

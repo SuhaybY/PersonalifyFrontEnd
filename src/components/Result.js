@@ -67,6 +67,7 @@ export default function Result({
           <SongActions>
             <Button
               bColor={liked === 1 ? 'green' : '#1a1a1d'}
+              hColor={'green'}
               onClick={() => {
                 rateSong(true);
                 setLiked(1);
@@ -76,6 +77,7 @@ export default function Result({
             </Button>
             <Button
               bColor={liked === 2 ? 'red' : '#1a1a1d'}
+              hColor={'red'}
               onClick={() => {
                 rateSong(false);
                 setLiked(2);
@@ -141,7 +143,7 @@ const SongActions = styled.div`
 `;
 
 const Button = styled.button`
-  background: ${(props) => props.bColor};
+  background-color: ${(props) => props.bColor};
   border: none;
   padding: 15px 30px;
   margin-right: 5px;
@@ -154,4 +156,8 @@ const Button = styled.button`
   padding: 8px 15px;
   font-size: 12px;
   color: white;
+
+  :hover {
+    background-color: ${(props) => props.hColor};
+  }
 `;
